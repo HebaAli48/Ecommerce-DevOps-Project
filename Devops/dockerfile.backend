@@ -1,0 +1,17 @@
+# Use a minimal Node.js LTS image
+FROM node:lts-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Remove default Nginx static files
+RUN rm -rf ./*
+
+# Copy package.json and package-lock.json
+COPY BackEnd ./
+
+# Expose the backend port
+EXPOSE 5000
+
+# Start the server
+CMD ["node", "server.js"]

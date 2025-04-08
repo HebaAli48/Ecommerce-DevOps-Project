@@ -1,0 +1,70 @@
+name: Build and Push to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies & Build Backend
+        run: |
+          echo "🚀 Setting up backend..."
+          cd BackEnd
+          npm install
+          echo "✅ Backend dependencies installed."
+
+      - name: Build Backend Docker Image
+        run: |
+          echo "🐳 Building backend Docker image..."
+          docker build -t ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.BACKEND_IMAGE }}:latest -f Devops/dockerfile.backend .
+          echo "✅ Backend Docker image built."
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Backend Image to Docker Hub
+        run: |
+          echo "🚀 Pushing backend image to Docker Hub..."
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.BACKEND_IMAGE }}:latest
+          echo "✅ Backend image pushed."
+
+  build_frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies & Build Frontend
+        run: |
+          echo "🚀 Setting up frontend..."
+          cd FrontEnd
+          npm install
+          npm run build
+          echo "✅ Frontend build completed."
+
+      - name: Build Frontend Docker Image
+        run: |
+          echo "🐳 Building frontend Docker image..."
+          docker build -t ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.FRONTEND_IMAGE }}:latest -f Devops/dockerfile.frontend .
+          echo "✅ Frontend Docker image built."
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push Frontend Image to Docker Hub
+        run: |
+          echo "🚀 Pushing frontend image to Docker Hub..."
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.FRONTEND_IMAGE }}:latest
+          echo "✅ Frontend image pushed."
