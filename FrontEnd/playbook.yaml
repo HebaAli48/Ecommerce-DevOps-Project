@@ -2,14 +2,12 @@
 - name: Build and Run Backend on Remote Hosts
   hosts: backend_servers
   become: yes
-  vars_files:
-    - secrets.yml
+
 
   vars:
     dockerhub_username: "hebaali4"
     backend_image: "hebaali4/backend-image"
     container_name: "backend"
-    app_port: "8000"
 
   tasks:
  # Step 1: Install prerequisites and Docker

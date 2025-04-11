@@ -1,5 +1,4 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
 import { clearCart } from "./cartSlice";
 import { clearWishlist } from "./wishlistSlice";
 
