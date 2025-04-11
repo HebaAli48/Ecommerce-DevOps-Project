@@ -1,5 +1,6 @@
+// src/router/AppRouter.js
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
 import AppLayout from "../components/layout/AppLayout";
 import AboutUs from "../pages/AboutUs";
@@ -11,6 +12,7 @@ import Cart from "../pages/Cart";
 import WishList from "../pages/WishList";
 import LoginPage from "../pages/LoginPage";
 import SignUpPage from "../pages/SignUpPage";
+import NotFound from "../pages/NotFound"; // Import the NotFound component
 
 function AppRouter() {
   return (
@@ -26,10 +28,7 @@ function AppRouter() {
         <Route path="wishlist" element={<WishList />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="sign-up" element={<SignUpPage />} />
-        {/* <Route path="products" element={<Products />}> */}
-        {/* <Route path="products" element={<Products />} />{" "} */}
-        {/* No changes needed */}
-        {/* </Route> */}
+        <Route path="*" element={<NotFound />} /> {/* Fallback for undefined routes */}
       </Route>
     </Routes>
   );
