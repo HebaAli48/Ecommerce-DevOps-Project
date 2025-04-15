@@ -1,5 +1,5 @@
 ---
-- name: Build and Run Backend on Remote Hosts
+- name: Build and Run Backend on Remote Hosts with Node Exporter
   hosts: backend_servers
   become: yes
   vars_files:
@@ -7,12 +7,13 @@
 
   vars:
     dockerhub_username: "hebaali4"
-    backend_image: "hebaali4/backend-image"
+    backend_image: "hebaali4/be"
     container_name: "backend"
     app_port: "8000"
+    node_exporter_version: "1.6.1"
 
   tasks:
- # Step 1: Install prerequisites and Docker
+    # Install Docker and dependencies
     - name: Install required system packages
       apt:
         name: "{{ item }}"
@@ -53,10 +54,11 @@
 
     - name: Add user to Docker group
       user:
-        name: ubuntu   # Replace with your desired username
+        name: ubuntu
         groups: docker
         append: yes    
-        
+
+    # Backend container setup
     - name: Ensure backend container is absent
       docker_container:
         name: "{{ container_name }}"
@@ -94,21 +96,40 @@
           HASHING_COST: "10"
           ENCRYPTION_KEY: "{{ ENCRYPTION_KEY }}"
 
-    - name: Verify container is running
-      shell: docker ps --filter "name={{ container_name }}"
-      register: container_status
-      changed_when: false
+    - name: Download Node Exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/node_exporter.tar.gz"
 
-    - name: Show container status
-      debug:
-        var: container_status.stdout_lines
+    - name: Extract Node Exporter
+      unarchive:
+        src: "/tmp/node_exporter.tar.gz"
+        dest: "/opt/"
+        remote_src: yes
 
-    - name: Check container logs for errors
-      shell: docker logs {{ container_name }}
-      register: container_logs
-      changed_when: false
-      ignore_errors: yes
+    - name: Create symlink for Node Exporter
+      file:
+        src: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: "/usr/local/bin/node_exporter"
+        state: link
 
-    - name: Display container logs
-      debug:
-        var: container_logs.stdout_lines
+    - name: Create systemd service for Node Exporter
+      copy:
+        dest: /etc/systemd/system/node_exporter.service
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/node_exporter
+          Restart=always
+
+          [Install]
+          WantedBy=default.target
+
+    - name: Start and enable Node Exporter
+      systemd:
+        name: node_exporter
+        state: started
+        enabled: yes

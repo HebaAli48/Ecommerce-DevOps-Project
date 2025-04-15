@@ -57,28 +57,13 @@ app.use((err, req, res, next) => {
   });
 });
 
-// app.listen(+process.env.PORT, (error) => {
-//   if (!error)
-//     console.log(
-//       "Server is Successfully Running, and App is listening on port " +
-//         +process.env.PORT
-//     );
-//   else console.log("Error occurred, server can't start", error);
-// });
-app.listen(+process.env.PORT1, (error) => {
+app.listen(+process.env.PORT, (error) => {
   if (!error)
     console.log(
-      "Server is Successfully Running, and App is listening on port1 " +
-        +process.env.PORT1
+      "Server is Successfully Running, and App is listening on port " +
+        +process.env.PORT
     );
   else console.log("Error occurred, server can't start", error);
 });
 
-app.listen(+process.env.PORT2, (error) => {
-  if (!error)
-    console.log(
-      "Server is Successfully Running, and App is listening on port2 " +
-        +process.env.PORT2
-    );
-  else console.log("Error occurred, server can't start", error);
-});
+
