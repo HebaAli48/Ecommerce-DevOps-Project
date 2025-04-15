@@ -100,7 +100,8 @@
       debug:
         var: frontend_container_logs.stdout_lines
 
-    # Prometheus setup
+    # Prometheus 
+    # 
     - name: Create Prometheus config directory
       file:
         path: /opt/prometheus
