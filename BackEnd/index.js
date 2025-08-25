@@ -19,16 +19,17 @@ const productCategoryRouter = require("./src/routes/productCategoryRoutes");
 const productSubCategoryRouter = require("./src/routes/productSubCategoryRoutes");
 const cartRouter = require("./src/routes/cartRoutes");
 
-//payment
-// const payment = require("./src/utils/user/payment");
+
 const verifyToken = require("./src/utils/verifyToken");
 
-app.use(cors());
-// app.post(
-//   "/webhook-checkout",
-//   express.raw({ type: "application/json" }),
-//   payment.webhookCheckout
-// );
+app.use(
+  cors({
+    origin: "*", // Allow all origins (you can specify frontend URL instead)
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 
 // parsing incoming requests
 app.use(express.json());
@@ -45,16 +46,7 @@ app.use("/products", productRouter);
 app.use("/product-category", productCategoryRouter);
 app.use("/product-sub-category", productSubCategoryRouter);
 app.use("/carts", cartRouter);
-// payment route
-// app.post(
-//   "/create-checkout-session",
-//   verifyToken,
-//   payment.createCheckoutSession
-// );
 
-// app.use((req, res, next) => {
-//   res.send("<h1 style='text-align:center'>Hello World</h1>");
-// });
 // Global error handler
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
@@ -73,3 +65,5 @@ app.listen(+process.env.PORT, (error) => {
     );
   else console.log("Error occurred, server can't start", error);
 });
+
+

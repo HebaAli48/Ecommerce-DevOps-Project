@@ -12,7 +12,10 @@ const {
   validateCategory,
   validateEditCategory,
 } = require("../utils/validation/categoryValidation");
-const { uploadToFolder } = require("../middlewares/uploadFileToSpecificFolder");
+const { uploadToS3Middleware } = require("../middlewares/uploadS3Middleware");
+const { uploadToCloudinary } = require("../middlewares/uploadMiddleware");
+
+
 //Get All
 router.get("/", getAllProductCategory);
 
@@ -22,7 +25,7 @@ router.post(
   "/",
   verifyToken,
   isAdmin,
-  uploadToFolder("categories", 1),
+  uploadToCloudinary("categories", 1),
   validateCategory,
   createProductCategory
 );

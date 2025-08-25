@@ -1,20 +1,17 @@
-# Use an official Node.js runtime as a parent image
-FROM node:22
+# Step 1: Build the React App
+FROM nginx:alpine
 
-# Set the working directory in the container
-WORKDIR /app
+# Copy the built files from the builder stage
+COPY ./dist /usr/share/nginx/html
 
-# Copy the package.json and package-lock.json (or yarn.lock) files to install dependencies
-COPY package.json  ./
+# Copy custom Nginx config for handling React routing
+COPY ./nginx.conf /etc/nginx/nginx.conf
+# Copy custom errors pages
 
-# Install dependencies (both production and development dependencies)
-RUN npm install
+COPY src/error-pages /usr/share/nginx/html/error-pages
 
-# Copy the rest of the application code into the container
-COPY . .
+# Expose port 80
+EXPOSE 80
 
-# Expose port 3000 (or the port your app is running on)
-EXPOSE 5173
-
-# Command to run the app (start the development server)
-CMD ["npm", "run", "dev"]
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"]

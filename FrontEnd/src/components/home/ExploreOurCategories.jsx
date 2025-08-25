@@ -57,7 +57,7 @@ const ExploreOurCategories = () => {
               >
                 <img
                   className="rounded-t-lg w-full h-56 object-contain"
-                  src={`${URL}/${category.image}`}
+                  src={`${category.image}`}
                   alt={category.name}
                 />
               </a>

@@ -79,8 +79,8 @@ const CategoryProducts = () => {
               {/* Product Image */}
               <div className="w-full h-64 overflow-hidden rounded-t-lg">
                 <img
-                  src={`${URL}/${
-                    product.imgsUrls[product.imgsUrls.length - 1]
+                  src={`${
+                    product.imgsUrls[0]
                   }`}
                   alt={product.name}
                   className="w-full h-full object-cover"

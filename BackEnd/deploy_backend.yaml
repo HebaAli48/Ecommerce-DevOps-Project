@@ -1,0 +1,135 @@
+---
+- name: Build and Run Backend on Remote Hosts with Node Exporter
+  hosts: backend_servers
+  become: yes
+  vars_files:
+    - secrets.yml
+
+  vars:
+    dockerhub_username: "hebaali4"
+    backend_image: "hebaali4/be"
+    container_name: "backend"
+    app_port: "8000"
+    node_exporter_version: "1.6.1"
+
+  tasks:
+    # Install Docker and dependencies
+    - name: Install required system packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - gnupg-agent
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: yes
+
+    - name: Install Docker CE
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+
+    - name: Ensure Docker service is running and enabled
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to Docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes    
+
+    # Backend container setup
+    - name: Ensure backend container is absent
+      docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove existing backend image
+      shell: docker rmi {{ backend_image }} || true
+      ignore_errors: yes
+
+    - name: Pull Backend Docker image
+      docker_image:
+        name: "{{ backend_image }}"
+        source: pull
+
+    - name: Stop any process using port {{ app_port }}
+      shell: |
+        lsof -i :{{ app_port }} -t | xargs -r sudo kill -9
+      ignore_errors: yes
+
+    - name: Run Backend container
+      docker_container:
+        name: "{{ container_name }}"
+        image: "{{ backend_image }}"
+        ports:
+          - "{{ app_port }}:{{ app_port }}"
+        restart_policy: always
+        state: started
+        env:
+          PORT: "{{ app_port }}"
+          DB_USER_NAME: "{{ DB_USER_NAME }}"
+          DB_PASSWORD: "{{ DB_PASSWORD }}"
+          DB_NAME: "{{ DB_NAME }}"
+          DB_URI: "{{ DB_URI }}"
+          HASHING_COST: "10"
+          ENCRYPTION_KEY: "{{ ENCRYPTION_KEY }}"
+
+    - name: Download Node Exporter
+      get_url:
+        url: "https://github.com/prometheus/node_exporter/releases/download/v{{ node_exporter_version }}/node_exporter-{{ node_exporter_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/node_exporter.tar.gz"
+
+    - name: Extract Node Exporter
+      unarchive:
+        src: "/tmp/node_exporter.tar.gz"
+        dest: "/opt/"
+        remote_src: yes
+
+    - name: Create symlink for Node Exporter
+      file:
+        src: "/opt/node_exporter-{{ node_exporter_version }}.linux-amd64/node_exporter"
+        dest: "/usr/local/bin/node_exporter"
+        state: link
+
+    - name: Create systemd service for Node Exporter
+      copy:
+        dest: /etc/systemd/system/node_exporter.service
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/node_exporter
+          Restart=always
+
+          [Install]
+          WantedBy=default.target
+
+    - name: Start and enable Node Exporter
+      systemd:
+        name: node_exporter
+        state: started
+        enabled: yes

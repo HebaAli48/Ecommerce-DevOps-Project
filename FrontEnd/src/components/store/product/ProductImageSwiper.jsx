@@ -42,7 +42,7 @@ const ProductImageSwiper = ({ product }) => {
         {product?.imgsUrls.map((image, index) => (
           <SwiperSlide key={index}>
             <img
-              src={`${URL}/${image}`}
+              src={`${image}`}
               alt={`Product Image ${index + 1}`}
               className="rounded-lg w-full h-[400px] object-cover"
             />
@@ -123,7 +123,7 @@ const ProductImageSwiper = ({ product }) => {
         {product?.imgsUrls.map((image, index) => (
           <SwiperSlide key={index}>
             <img
-              src={`${URL}/${image}`}
+              src={`${image}`}
               alt={`Thumbnail ${index + 1}`}
               className="rounded-md w-full h-[100px] object-cover"
             />

@@ -77,18 +77,10 @@ const createProduct = async (req, res, next) => {
     const { name, subCategoryId, vendor, price, description } = req.body;
 
     // Handle multiple files
-    const filePaths = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "products",
-          `${req.body.name}_${req.body.subCategoryId}`,
-          file.filename
-        );
-        filePaths.push(filePath);
-      });
-    }
+          const filePaths = req.files?.map((file) => file.path) || [];
+      
+    
+  
 
     // Create a new Product
     const createdProduct = await Product.create({
@@ -106,21 +98,8 @@ const createProduct = async (req, res, next) => {
       createdProduct,
     });
   } catch (error) {
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "products",
-          `${req.body.name}_${req.body.subCategoryId}`,
-          file.filename
-        );
-        deleteFile(filePath);
-      });
-    }
-    console.error("Error in creation:", error);
-
-    const errorMsg = error.message || "Error during product creation";
-    return next(new AppError(errorMsg, 400));
+    console.error("Error in product category creation:", error);
+    return next(new AppError(error.message || "Failed to create category", 500));
   }
 };
 // --------------------------------------------------------------------------------------------------------

@@ -53,21 +53,14 @@ const getAllProductSubCategory = async (req, res, next) => {
 const createProductSubCategory = async (req, res, next) => {
   try {
     const { name, categoryId } = req.body;
-    const filePaths = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "sub_categories",
-          `${req.body.name}`,
-          file.filename
-        );
-        filePaths.push(filePath);
-      });
-    }
+      const filePaths = req.files?.map((file) => file.path) || [];
+  
+      // If there are files, set the first one as the main image
+      const mainImage = filePaths.length > 0 ? filePaths[0] : null;
+  
     let newProductSubCategory = await ProductSubCategory.create({
       name,
-      image: filePaths[0],
+      image: mainImage, // Store the first file as the main image
       categoryId,
     });
     res.status(201).json({
@@ -75,21 +68,8 @@ const createProductSubCategory = async (req, res, next) => {
       newProductSubCategory,
     });
   } catch (error) {
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "categories",
-          `${req.body.name}`,
-          file.filename
-        );
-        deleteFile(filePath);
-      });
-    }
-    console.error("Error in creation:", error);
-
-    const errorMsg = error.message || "Error during product creation";
-    return next(new AppError(errorMsg, 400));
+    console.error("Error in product category creation:", error);
+    return next(new AppError(error.message || "Failed to create category", 500));
   }
 };
 // ـــــــــــــــــــــــــــــــــــ update the ProductSubCategory by id ــــــــــــــــــــــــــــــــــ

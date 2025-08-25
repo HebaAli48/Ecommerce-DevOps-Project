@@ -1,21 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import bags from "../../assets/images/bags2.jpg";
-import clothesWomen from "../../assets/images/clothesWomen.jpg";
-import shoesWomen from "../../assets/images/shoesWomen2.webp";
-import sunglasses from "../../assets/images/sunglasses.webp";
-import menSunGlasses from "../../assets/images/menSunGlasses.avif";
-import AccessoriesWowmen from "../../assets/images/AccessoriesWowmen.jpg";
-import menWatch from "../../assets/images/menWatch.webp";
-import womenWatch from "../../assets/images/womenWatch.webp";
-import menShose from "../../assets/images/menShose.jpg";
-import menClothes from "../../assets/images/menClothes.jpg";
-import menBags from "../../assets/images/menBags.jpg";
-import kidsClothes from "../../assets/images/kidsClothes.jpg";
-import kidsshoes from "../../assets/images/kidsshoes.jpg";
-import kidsToys from "../../assets/images/kidsToys.jpg";
-import kidsAcc from "../../assets/images/kids11.webp";
-import kidsBags from "../../assets/images/kidsBags.webp";
+
 import Button from "../UI/Button";
 import Loading from "../UI/Loading";
 import URL from "../../utils/URL";
@@ -88,7 +73,7 @@ const MainStore = () => {
                   onClick={() => handleSubcategoryClick(sub._id)}
                 >
                   <img
-                    src={`${URL}/${sub.image}`}
+                    src={`${sub.image}`}
                     alt={sub.name}
                     className="mx-auto h-[200px] w-full rounded-t-md object-cover"
                   />

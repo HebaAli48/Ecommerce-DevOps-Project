@@ -5,7 +5,7 @@ const isAdmin = async (req, res, next) => {
   if (!req.user.role === "admin") {
     return next(new AppError("You Don't Have Permissions to delete User", 403));
   }
-  console.log("🚀 ~ isAdmin ~ req:", req.user.role);
+  // console.log("🚀 ~ isAdmin ~ req:", req.user.role);
   next();
 };
 

@@ -4,7 +4,8 @@ const router = express.Router();
 // verify req have token and based on token asingn the user to the req
 const verifyToken = require("../utils/verifyToken");
 const isAdmin = require("../utils/isAdmin");
-const { uploadToFolder } = require("../middlewares/uploadFileToSpecificFolder");
+const { uploadToS3Middleware } = require("../middlewares/uploadS3Middleware");
+
 
 // Product Controllers
 const {
@@ -20,6 +21,7 @@ const {
   validateProduct,
   validateEditProduct,
 } = require("../utils/validation/productValidation");
+const { uploadToCloudinary } = require("../middlewares/uploadMiddleware");
 
 // get all Products
 router.get("/", getAllProducts);
@@ -37,7 +39,7 @@ router.post(
   "/",
   verifyToken,
   isAdmin,
-  uploadToFolder("products", 8),
+  uploadToCloudinary("products", 8),
   validateProduct,
   createProduct
 );
@@ -47,7 +49,7 @@ router.patch(
   "/:id",
   verifyToken,
   isAdmin,
-  uploadToFolder("products", 8),
+  uploadToS3Middleware("products", 8),
   validateEditProduct,
   updateProduct
 );

@@ -19,57 +19,47 @@ const getAllProductCategory = async (req, res, next) => {
 };
 
 // ــــــــــــــــــــــــــــــ Create product category ـــــــــــــــــــــــــــــــــــــــــــــ
+
 const createProductCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;
-    // Handle single file
-    // Handle multiple files
-    const filePaths = [];
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "categories",
-          `${req.body.name}`,
-          file.filename
-        );
-        filePaths.push(filePath);
-      });
+
+    // Extract uploaded file URLs from Cloudinary
+    const filePaths = req.files?.map((file) => file.path) || [];
+
+    // If there are files, set the first one as the main image
+    const mainImage = filePaths.length > 0 ? filePaths[0] : null;
+
+    // Ensure name is provided
+    if (!name) {
+      return next(new AppError("Category name is required!", 400));
     }
-    let newProductCategory = await ProductCategory.create({
+
+    // Ensure an image is uploaded
+    if (!mainImage) {
+      return next(new AppError("Image is required!", 400));
+    }
+
+    // Create a new product category in the database
+    const newProductCategory = await ProductCategory.create({
       name,
       description,
-      image: filePaths[0],
+      image: mainImage, // Store the first file as the main image
     });
-    console.log("🚀 ~ createProductCategory ~ filePaths:", filePaths);
 
-    console.log(
-      "🚀 ~ createProductCategory ~ newProductCategory:",
-      newProductCategory
-    );
 
+    // Send response
     res.status(201).json({
-      message: "product category has been Created",
-      newProductCategory,
+      message: "Product category has been created successfully",
+      category: newProductCategory,
     });
   } catch (error) {
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const filePath = path.join(
-          "uploads",
-          "categories",
-          `${req.body.name}`,
-          file.filename
-        );
-        deleteFile(filePath);
-      });
-    }
-    console.error("Error in creation:", error);
-
-    const errorMsg = error.message || "Error during product creation";
-    return next(new AppError(errorMsg, 400));
+    console.error("Error in product category creation:", error);
+    return next(new AppError(error.message || "Failed to create category", 500));
   }
 };
+
+
 // ـــــــــــــــــــــــــــــــــــ update the ProductCategory by id ــــــــــــــــــــــــــــــــــ
 const updateProductCategoryById = async (req, res, next) => {
   const { id } = req.params;

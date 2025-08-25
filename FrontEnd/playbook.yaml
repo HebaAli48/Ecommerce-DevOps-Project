@@ -1,0 +1,167 @@
+---
+- name: Build and Run Frontend with Prometheus and Grafana
+  hosts: frontend_servers
+  become: yes
+
+  vars:
+    dockerhub_username: "hebaali4"
+    Frontend_image: "hebaali4/fe"
+    container_name: "frontend"
+    prometheus_container: "prometheus"
+    grafana_container: "grafana"
+
+  tasks:
+    # Install Docker and dependencies
+    - name: Install required system packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - gnupg-agent
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+        state: present
+        update_cache: yes
+
+    - name: Install Docker CE
+      apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+
+    - name: Ensure Docker service is running and enabled
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add user to Docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes    
+
+    # Frontend container setup
+    - name: Ensure frontend container is absent
+      docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove existing frontend image
+      shell: docker rmi {{ Frontend_image }} || true
+      ignore_errors: yes
+
+    - name: Pull Frontend Docker image
+      docker_image:
+        name: "{{ Frontend_image }}"
+        source: pull
+
+    - name: Run Frontend container
+      docker_container:
+        name: "{{ container_name }}"
+        image: "{{ Frontend_image }}"
+        ports:
+          - "80:80"
+        restart_policy: always
+        state: started
+
+    - name: Verify frontend container is running
+      shell: docker ps --filter "name={{ container_name }}"
+      register: frontend_container_status
+      changed_when: false
+
+    - name: Show frontend container status
+      debug:
+        var: frontend_container_status.stdout_lines
+
+    - name: Check frontend container logs
+      shell: docker logs {{ container_name }}
+      register: frontend_container_logs
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display frontend container logs
+      debug:
+        var: frontend_container_logs.stdout_lines
+
+    # Prometheus 
+    # 
+    - name: Create Prometheus config directory
+      file:
+        path: /opt/prometheus
+        state: directory
+    - name: Create prometheus.yml config file
+      copy:
+        dest: /opt/prometheus/prometheus.yml
+        content: |
+          global:
+            scrape_interval: 15s
+
+          scrape_configs:
+            - job_name: 'prometheus'
+              static_configs:
+                - targets: ['localhost:9090']
+            - job_name: 'backend-apis'
+              static_configs:
+                - targets: ['13.60.70.106:9100', '51.20.184.136:9100']  # Replace with actual private IPs
+
+    - name: Run Prometheus container
+      docker_container:
+        name: "{{ prometheus_container }}"
+        image: "prom/prometheus"
+        ports:
+          - "9090:9090"
+        volumes:
+          - "/opt/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+        restart_policy: always
+        state: started
+
+    - name: Verify Prometheus is running
+      shell: docker ps --filter "name={{ prometheus_container }}"
+      register: prometheus_status
+      changed_when: false
+
+    - name: Show Prometheus status
+      debug:
+        var: prometheus_status.stdout_lines
+
+    # Grafana setup
+    - name: Run Grafana container
+      docker_container:
+        name: "{{ grafana_container }}"
+        image: "grafana/grafana"
+        ports:
+          - "3000:3000"
+        restart_policy: always
+        state: started
+
+    - name: Verify Grafana is running
+      shell: docker ps --filter "name={{ grafana_container }}"
+      register: grafana_status
+      changed_when: false
+
+    - name: Show Grafana status
+      debug:
+        var: grafana_status.stdout_lines
+    
+    - name: Restart Prometheus to reload config
+      docker_container:
+        name: "{{ prometheus_container }}"
+        state: started
+        restart: yes
